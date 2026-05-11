@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Fox Store",
+    "slug": "fox-store",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.foxsd.foxstore"
+    }
+  }
+}

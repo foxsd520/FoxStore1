@@ -1,0 +1,55 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // الدوال المساعدة
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'foxsd520@gmail.com';
+    }
+
+    function isDeveloper() {
+      return isSignedIn() &&
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['developer', 'admin'];
+    }
+
+    // المسموح رفعه فقط: صور وصيغ التطبيقات
+    function isAllowedFileType() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType == 'application/vnd.android.package-archive' ||
+             request.resource.contentType == 'application/octet-stream';
+    }
+
+    // الحد الأقصى 100MB
+    function isAllowedSize() {
+      return request.resource.size < 100 * 1024 * 1024;
+    }
+
+    // مجلد التطبيقات: apps/{userId}/
+    match /apps/{userId}/{fileName} {
+      allow read: if true; // أي زول يقدر ينزل التطبيق
+      allow write: if isDeveloper() &&
+                   request.auth.uid == userId &&
+                   isAllowedFileType() &&
+                   isAllowedSize() &&
+                   request.resource.name.matches('.*\\.(apk|aab|png|jpg|jpeg|webp)$');
+    }
+
+    // مجلد صور البروفايل
+    match /profiles/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() &&
+                   request.auth.uid == userId &&
+                   request.resource.contentType.matches('image/.*') &&
+                   request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // منع كل شيء تاني
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
