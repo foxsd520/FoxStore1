@@ -53,3 +53,18 @@ eas build -p android --profile preview
 ## ملاحظات مهمة
 - لا أقدر من داخل هذه البيئة أرفع الملف بنفسي على حسابك أو أصدر رابط عام بدون صلاحيات حساب Expo/Firebase الخاصة بك.
 - لكن المشروع جاهز للبناء، والخطوات أعلاه تعطيك رابط APK مباشر فورًا.
+
+
+## بناء APK تلقائيًا عبر GitHub Actions
+تمت إضافة Workflow جاهز في: `.github/workflows/android-apk.yml`
+
+### الإعداد مرة واحدة
+1. في GitHub افتح: **Settings > Secrets and variables > Actions**.
+2. أضف Secret باسم: `EXPO_TOKEN`.
+3. خذ التوكن من Expo عبر: `expo token:create` (أو من حساب Expo).
+
+### التشغيل
+- شغّل الـ workflow يدويًا من تبويب **Actions** (Workflow: `Build Android APK (EAS)`).
+- أو سيتم تشغيله تلقائيًا عند Push على فرع `main` أو `work`.
+
+بعد التنفيذ ستجد رابط تتبع/تنزيل الـ APK داخل **Job Summary** في GitHub Actions.

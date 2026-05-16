@@ -1,0 +1,52 @@
+name: Build Android APK (EAS)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - work
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Trigger APK build on EAS
+        id: eas_build
+        run: |
+          set -euo pipefail
+          BUILD_JSON=$(eas build --platform android --profile preview --non-interactive --json)
+          echo "$BUILD_JSON" > build-result.json
+
+          BUILD_URL=$(node -e "const fs=require('fs');const b=JSON.parse(fs.readFileSync('build-result.json','utf8'));const row=Array.isArray(b)?b[0]:b;console.log(row?.buildDetailsPageUrl || row?.artifacts?.buildUrl || '')")
+
+          if [ -z "$BUILD_URL" ]; then
+            echo "Could not find build URL in EAS response"
+            cat build-result.json
+            exit 1
+          fi
+
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+
+      - name: Publish build link in summary
+        run: |
+          echo "## Android APK build" >> $GITHUB_STEP_SUMMARY
+          echo "Download / track build: ${{ steps.eas_build.outputs.build_url }}" >> $GITHUB_STEP_SUMMARY
